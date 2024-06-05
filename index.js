@@ -32,7 +32,9 @@ async function run() {
     // await client.connect();
     // Send a ping to confirm a successful connection
     const userCollection = client.db('hrWorkFlowHubDB').collection('users');
+    const taskCollection = client.db('hrWorkFlowHubDB').collection('tasks');
 
+    //user related apis
     app.post('/users', async(req,res)=>{
         const user= req.body;
         const query = {email: user.email};
@@ -43,6 +45,13 @@ async function run() {
         const result= await userCollection.insertOne(user);
         res.send(result);
       })
+
+    //task related apis
+    app.post('/tasks', async(req,res)=>{
+      const task= req.body;
+      const result= await taskCollection.insertOne(task);
+      res.send(result);
+    })
 
 
     await client.db("admin").command({ ping: 1 });
