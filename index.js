@@ -2,6 +2,7 @@ const express = require('express');
 const app= express();
 const cors = require('cors');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
 
@@ -33,6 +34,7 @@ async function run() {
     // Send a ping to confirm a successful connection
     const userCollection = client.db('hrWorkFlowHubDB').collection('users');
     const taskCollection = client.db('hrWorkFlowHubDB').collection('tasks');
+    const paymentCollection = client.db('hrWorkFlowHubDB').collection('payments');
 
     //user related apis
     app.get('/users', async(req,res)=>{
@@ -103,6 +105,31 @@ async function run() {
     app.post('/tasks', async(req,res)=>{
       const task= req.body;
       const result= await taskCollection.insertOne(task);
+      res.send(result);
+    })
+
+
+    //payment Apis
+    app.post('/create-payment-intent', async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      console.log(amount, 'amount inside the intent')
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card']
+      });
+
+      res.send({
+        clientSecret: paymentIntent.client_secret
+      })
+    });
+
+    app.post('/payments', async (req, res) => {
+      const payment = req.body;
+      const result = await paymentCollection.insertOne(payment);
+      console.log('payment info', payment);
       res.send(result);
     })
 
