@@ -51,6 +51,12 @@ async function run() {
       res.send({ employee });
     })
 
+    app.get('/users/employees', async (req, res) => {
+      const query = { role: 'employee' };
+      const result = await userCollection.find(query).toArray();
+      res.send(result);
+    });
+
 
     app.post('/users', async(req,res)=>{
         const user= req.body;
