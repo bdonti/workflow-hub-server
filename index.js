@@ -148,7 +148,7 @@ async function run() {
     app.get("/payments", async(req,res) =>{
       const email= req.query.email;
       const query= {employeeEmail: email};
-      const result = await paymentCollection.find(query).toArray();
+      const result = await paymentCollection.find(query).sort({ createdAt: -1 }).toArray();
       res.send(result);
     })
 
