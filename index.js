@@ -126,13 +126,24 @@ async function run() {
       })
     });
 
+
     app.post('/payments', async (req, res) => {
       const payment = req.body;
-      const result = await paymentCollection.insertOne(payment);
-      console.log('payment info', payment);
-      res.send(result);
-    })
-
+      
+      const existingPayment = await paymentCollection.findOne({
+        employeeEmail: payment.employeeEmail,
+        month: payment.month,
+        year: payment.year
+      });
+      
+      if (existingPayment) {
+        return res.status(400).json({ message: 'Salary already paid for this month and year' });
+      } else {
+        const result = await paymentCollection.insertOne(payment);
+        console.log('payment info', payment);
+        return res.status(200).json(result);
+      }
+    });
 
 
     await client.db("admin").command({ ping: 1 });
