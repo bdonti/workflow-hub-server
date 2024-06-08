@@ -180,12 +180,21 @@ async function run() {
       }
     });
 
-    app.get("/payments", async(req,res) =>{
-      const email= req.query.email;
-      const query= {employeeEmail: email};
-      const result = await paymentCollection.find(query).sort({ year: -1, month: -1 }).toArray();
+    app.get("/payments", async (req, res) => {
+      const email = req.query.email;
+      const limit = parseInt(req.query.limit); 
+      const offset = parseInt(req.query.offset);
+  
+      const query = { employeeEmail: email };
+      const result = await paymentCollection
+          .find(query)
+          .sort({ year: -1, month: -1 })
+          .skip(offset) 
+          .limit(limit) 
+          .toArray();
+  
       res.send(result);
-    })
+  });
 
     app.get('/payments/:email', async(req, res)=>{
       const email = req.params.email;
