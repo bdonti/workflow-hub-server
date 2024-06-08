@@ -102,6 +102,41 @@ async function run() {
       res.send(result);
   })
 
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June", 
+    "July", "August", "September", "October", "November", "December"
+  ];
+  
+  app.get('/tasks/details', async (req, res) => {
+    const { name, month } = req.query;
+    const query = {};
+  
+    if (name) {
+      query.name = name;
+    }
+  
+    if (month) {
+    
+    }
+  
+    const tasks = await taskCollection.find(query).toArray();
+    
+    const filteredTasks = month
+      ? tasks.filter(task => {
+          const taskDate = new Date(task.date);
+          return monthNames[taskDate.getUTCMonth()].toLowerCase() === month.toLowerCase();
+        })
+      : tasks;
+      
+    const result = filteredTasks.map(task => {
+      const taskDate = new Date(task.date);
+      const monthName = monthNames[taskDate.getUTCMonth()];
+      return { ...task, monthName };
+    });
+    
+    res.send(result);
+  });
+
     app.post('/tasks', async(req,res)=>{
       const task= req.body;
       const result= await taskCollection.insertOne(task);
