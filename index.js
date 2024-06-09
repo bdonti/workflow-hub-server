@@ -182,18 +182,25 @@ async function run() {
 
     app.get("/payments", async (req, res) => {
       const email = req.query.email;
-      const limit = parseInt(req.query.limit); 
-      const offset = parseInt(req.query.offset);
-  
+      let limit = parseInt(req.query.limit) || 5;
+      let offset = parseInt(req.query.offset) || 0; 
+    
+      if (limit < 1 || offset < 0) {
+        return res.status(400).send({ error: "Please Correct the limit" });
+      }
+    
       const query = { employeeEmail: email };
-      const result = await paymentCollection
+    
+        const totalCount = await paymentCollection.countDocuments(query);
+    
+        const result = await paymentCollection
           .find(query)
           .sort({ year: -1, month: -1 })
-          .skip(offset) 
-          .limit(limit) 
+          .skip(offset)
+          .limit(limit)
           .toArray();
-  
-      res.send(result);
+    
+        res.send({ totalCount, payments: result });
   });
 
     app.get('/payments/:email', async(req, res)=>{
