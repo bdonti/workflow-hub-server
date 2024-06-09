@@ -93,6 +93,15 @@ async function run() {
       res.send(result);
     });
 
+    app.put('/users/fire/:id', async (req, res) => {
+      const id = req.params.id;
+      const result = await userCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { isFired: true } }
+      );
+      res.send(result);
+    });
+
     app.put("/users/verify/:id", async(req,res) =>{
       const id = req.params.id;
       const result = await userCollection.updateOne(
