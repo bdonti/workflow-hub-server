@@ -93,6 +93,24 @@ async function run() {
       res.send(result);
     });
 
+    app.put('/users/adjust-salary/:id', async (req, res) => {
+      const id = req.params.id;
+      const { newSalary } = req.body;
+
+      const { salary } = await userCollection.findOne({ _id: new ObjectId(id) });
+    
+      if (parseInt(newSalary) < parseInt(salary)) {
+        return res.status(400).json({ message: "Salary is lower than previously" });
+      }
+      
+      const result = await userCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { salary: newSalary } }
+      );
+
+      res.send(result);
+    });
+
     app.put('/users/fire/:id', async (req, res) => {
       const id = req.params.id;
       const result = await userCollection.updateOne(
