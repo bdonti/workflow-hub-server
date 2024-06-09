@@ -70,7 +70,7 @@ async function run() {
       const user = await userCollection.findOne(query);
       let admin = false;
       if (user) {
-        hr = user?.role === 'admin';
+        admin = user?.role === 'admin';
       }
       res.send({ admin });
     })
