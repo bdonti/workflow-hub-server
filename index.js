@@ -102,6 +102,16 @@ async function run() {
       res.send(result);
     });
 
+    app.put('/users/make-hr/:id', async (req, res) => {
+      const id = req.params.id;
+        const result = await userCollection.updateOne(
+          { _id: new ObjectId(id) },
+          { $set: { role: 'hr' } }
+        );
+       res.send(result);
+    });
+
+
     app.put("/users/verify/:id", async(req,res) =>{
       const id = req.params.id;
       const result = await userCollection.updateOne(
