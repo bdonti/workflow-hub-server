@@ -212,6 +212,11 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/opinions', async(req,res)=>{
+      const result= await opinionCollection.find().toArray();
+      res.send(result);
+    })
+
     //payment Apis
     app.post('/create-payment-intent', async (req, res) => {
       const { price } = req.body;
