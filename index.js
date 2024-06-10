@@ -276,12 +276,18 @@ async function run() {
         res.send({ totalCount, payments: result });
   });
 
+    app.get('/allPayments', async(req, res)=>{
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    })
+
     app.get('/payments/:email', async(req, res)=>{
       const email = req.params.email;
       const query = { employeeEmail: email };
       const result = await paymentCollection.find(query).toArray();
       res.send(result);
     })
+
 
 
     await client.db("admin").command({ ping: 1 });
