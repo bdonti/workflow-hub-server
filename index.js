@@ -35,6 +35,7 @@ async function run() {
     const userCollection = client.db('hrWorkFlowHubDB').collection('users');
     const taskCollection = client.db('hrWorkFlowHubDB').collection('tasks');
     const paymentCollection = client.db('hrWorkFlowHubDB').collection('payments');
+    const opinionCollection = client.db('hrWorkFlowHubDB').collection('opinions');
 
     //user related apis
     app.get('/users', async(req,res)=>{
@@ -203,6 +204,13 @@ async function run() {
       res.send(result);
     })
 
+
+    //opinions related apis
+    app.post('/opinions', async(req,res)=>{
+      const task= req.body;
+      const result= await opinionCollection.insertOne(task);
+      res.send(result);
+    })
 
     //payment Apis
     app.post('/create-payment-intent', async (req, res) => {
