@@ -40,21 +40,10 @@ async function run() {
 
 
      //jwt related apis
-     app.post('/jwt', async(req , res)=>{
-      const { email } = req.body;
-
-      const user = await userCollection.findOne({ email: email });
-      const role = user?.role || 'user'; 
-
-      if (!user) {
-        console.log('User not found');
-        return res.status(404).send({ message: 'User not found' });
-      }
-
-      const token = jwt.sign({ email, role }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-
-      console.log(`Bearer ${token} with user info email: ${email} & role: ${role}`); 
-      res.send({ token, email, role });
+     app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      res.send({ token });
     })
 
       // middlewares 
