@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 
 //middleware
 const corsOption = {
-  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'https://hr-workflow-hub.web.app', 'https://hr-workflow-hub.firebaseapp.com'],
   Credential: true,
   optionSuccessStatus: 200
 }
@@ -109,7 +109,7 @@ async function run() {
       }
 
     //user related apis
-    app.get('/users', async(req,res)=>{
+    app.get('/users', verifyToken, async(req,res)=>{
       const result= await userCollection.find().toArray();
       res.send(result);
     })
@@ -361,7 +361,7 @@ async function run() {
 
 
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
