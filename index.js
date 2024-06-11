@@ -2,6 +2,7 @@ const express = require('express');
 const app= express();
 const cors = require('cors');
 require('dotenv').config();
+const jwt = require('jsonwebtoken');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const port = process.env.PORT || 5000;
@@ -37,6 +38,76 @@ async function run() {
     const paymentCollection = client.db('hrWorkFlowHubDB').collection('payments');
     const opinionCollection = client.db('hrWorkFlowHubDB').collection('opinions');
 
+
+     //jwt related apis
+     app.post('/jwt', async(req , res)=>{
+      const { email } = req.body;
+
+      const user = await userCollection.findOne({ email: email });
+      const role = user?.role || 'user'; 
+
+      if (!user) {
+        console.log('User not found');
+        return res.status(404).send({ message: 'User not found' });
+      }
+
+      const token = jwt.sign({ email, role }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+
+      console.log(`Bearer ${token} with user info email: ${email} & role: ${role}`); 
+      res.send({ token, email, role });
+    })
+
+      // middlewares 
+      const verifyToken = (req, res, next) => {
+        if (!req.headers.authorization) {
+          return res.status(401).send({ message: 'unauthorized access' });
+        }
+        const token = req.headers.authorization.split(' ')[1];
+        jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+          if (err) {
+            return res.status(401).send({ message: 'unauthorized access' })
+          }
+          req.decoded = decoded;
+          next();
+        })
+      }
+
+      //verify admin
+      const verifyAdmin = async (req, res, next) => {
+        const email = req.decoded.email;
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        const isAdmin = user?.role === 'admin';
+        if (!isAdmin) {
+          return res.status(403).send({ message: 'forbidden access' });
+        }
+        next();
+      }
+
+      //verify HR
+      const verifyHR = async (req, res, next) => {
+        const email = req.decoded.email;
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        const isHR = user?.role === 'hr';
+        if (!isHR) {
+          return res.status(403).send({ message: 'forbidden access' });
+        }
+        next();
+      }
+
+      //verify Employee
+      const verifyEmployee = async (req, res, next) => {
+        const email = req.decoded.email;
+        const query = { email: email };
+        const user = await userCollection.findOne(query);
+        const isEmployee = user?.role === 'employee';
+        if (!isEmployee) {
+          return res.status(403).send({ message: 'forbidden access' });
+        }
+        next();
+      }
+
     //user related apis
     app.get('/users', async(req,res)=>{
       const result= await userCollection.find().toArray();
@@ -66,7 +137,7 @@ async function run() {
       res.send({ employee });
     })
 
-    app.get('/users/hr/:email', async (req, res) => {
+    app.get('/users/hr/:email',  async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
@@ -88,13 +159,13 @@ async function run() {
       res.send({ admin });
     })
 
-    app.get('/users/employees', async (req, res) => {
+    app.get('/users/employees', verifyToken, verifyHR, async (req, res) => {
       const query = { role: 'employee' };
       const result = await userCollection.find(query).toArray();
       res.send(result);
     });
 
-    app.put('/users/adjust-salary/:id', async (req, res) => {
+    app.put('/users/adjust-salary/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const { newSalary } = req.body;
 
@@ -112,7 +183,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put('/users/fire/:id', async (req, res) => {
+    app.put('/users/fire/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const result = await userCollection.updateOne(
         { _id: new ObjectId(id) },
@@ -121,7 +192,7 @@ async function run() {
       res.send(result);
     });
 
-    app.put('/users/make-hr/:id', async (req, res) => {
+    app.put('/users/make-hr/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
         const result = await userCollection.updateOne(
           { _id: new ObjectId(id) },
@@ -131,7 +202,7 @@ async function run() {
     });
 
 
-    app.put("/users/verify/:id", async(req,res) =>{
+    app.put("/users/verify/:id", verifyToken, verifyHR, async(req,res) =>{
       const id = req.params.id;
       const result = await userCollection.updateOne(
         { _id: new ObjectId(id) }, 
@@ -156,7 +227,7 @@ async function run() {
       })
 
     //task related apis
-    app.get('/tasks', async(req,res)=>{
+    app.get('/tasks', verifyToken, verifyEmployee, async(req,res)=>{
       const email= req.query.email;
       const query= {email: email};
       const result = await taskCollection.find(query).toArray();
@@ -168,7 +239,7 @@ async function run() {
     "July", "August", "September", "October", "November", "December"
   ];
   
-  app.get('/tasks/details', async (req, res) => {
+  app.get('/tasks/details', verifyToken, verifyHR, async (req, res) => {
     const { name, month } = req.query;
     const query = {};
   
@@ -198,7 +269,7 @@ async function run() {
     res.send(result);
   });
 
-    app.post('/tasks', async(req,res)=>{
+    app.post('/tasks', verifyToken, verifyEmployee, async(req,res)=>{
       const task= req.body;
       const result= await taskCollection.insertOne(task);
       res.send(result);
@@ -212,7 +283,7 @@ async function run() {
       res.send(result);
     })
 
-    app.get('/opinions', async(req,res)=>{
+    app.get('/opinions', verifyToken, verifyAdmin, async(req,res)=>{
       const result= await opinionCollection.find().toArray();
       res.send(result);
     })
@@ -235,7 +306,7 @@ async function run() {
     });
 
 
-    app.post('/payments', async (req, res) => {
+    app.post('/payments', verifyToken, verifyHR, async (req, res) => {
       const payment = req.body;
       
       const existingPayment = await paymentCollection.findOne({
@@ -276,7 +347,7 @@ async function run() {
         res.send({ totalCount, payments: result });
   });
 
-    app.get('/allPayments', async(req, res)=>{
+    app.get('/allPayments', verifyToken, verifyHR, async(req, res)=>{
       const result = await paymentCollection.find().toArray();
       res.send(result);
     })
