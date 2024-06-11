@@ -126,7 +126,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get('/users/employee/:email', async (req, res) => {
+    app.get('/users/employee/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
@@ -137,7 +137,7 @@ async function run() {
       res.send({ employee });
     })
 
-    app.get('/users/hr/:email',  async (req, res) => {
+    app.get('/users/hr/:email', verifyToken,  async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
@@ -148,7 +148,7 @@ async function run() {
       res.send({ hr });
     })
 
-    app.get('/users/admin/:email', async (req, res) => {
+    app.get('/users/admin/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
       const user = await userCollection.findOne(query);
